@@ -1,0 +1,998 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Epilepsy Pre-Consult Questionnaire</title>
+<style>
+  :root, :root[data-theme="light"] {
+    --bg: #f4f6f8; --panel: #ffffff; --ink: #14181d; --muted: #5a6672;
+    --line: #d7dee6; --accent: #1f6feb; --accent-ink: #ffffff;
+    --ok: #1a7f4b; --warn: #8a5a00; --warn-bg: #fff6e5; --field: #ffffff;
+    --shadow: 0 1px 2px rgba(20,24,29,.06), 0 4px 16px rgba(20,24,29,.06);
+    --radius: 12px;
+  }
+  /* system dark, only when the viewer has not chosen a theme explicitly */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) {
+      --bg: #0f1216; --panel: #171b21; --ink: #e8edf2; --muted: #9aa7b4;
+      --line: #2a323b; --accent: #4f8bf5; --accent-ink: #0a0d10;
+      --ok: #4cc38a; --warn: #e0b341; --warn-bg: #2a220e; --field: #10141a;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 20px rgba(0,0,0,.35);
+    }
+  }
+  /* explicit dark choice */
+  :root[data-theme="dark"] {
+    --bg: #0f1216; --panel: #171b21; --ink: #e8edf2; --muted: #9aa7b4;
+    --line: #2a323b; --accent: #4f8bf5; --accent-ink: #0a0d10;
+    --ok: #4cc38a; --warn: #e0b341; --warn-bg: #2a220e; --field: #10141a;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 20px rgba(0,0,0,.35);
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  header.appbar {
+    position: sticky; top: 0; z-index: 10; background: var(--panel);
+    border-bottom: 1px solid var(--line); padding: 10px 16px;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+  .appbar h1 { font-size: 16px; margin: 0; font-weight: 650; letter-spacing: .1px; }
+  .tabs { margin-left: auto; display: flex; gap: 6px; }
+  .tabs button {
+    font: inherit; font-size: 14px; padding: 7px 14px; border-radius: 999px;
+    border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer;
+  }
+  .tabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .theme-btn {
+    font: inherit; font-size: 14px; padding: 7px 14px; border-radius: 999px;
+    border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; min-height: 38px;
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 16px; }
+  .note-banner {
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 12px 14px; color: var(--muted); font-size: 13.5px; margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  .note-banner strong { color: var(--ink); }
+  section.card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 16px; margin-bottom: 16px; box-shadow: var(--shadow);
+  }
+  section.card > h2 { margin: 0 0 4px; font-size: 17px; }
+  section.card > .intro { margin: 0 0 12px; color: var(--muted); font-size: 13.5px; }
+  .field { padding: 12px 0; border-top: 1px solid var(--line); }
+  .field:first-of-type { border-top: 0; }
+  .field > label.q, .field > .q { display: block; font-weight: 550; margin-bottom: 8px; }
+  .req { color: var(--warn); font-weight: 700; }
+  .added-tag {
+    font-size: 11px; font-weight: 600; color: var(--muted); border: 1px solid var(--line);
+    border-radius: 999px; padding: 1px 7px; margin-left: 6px; vertical-align: middle; white-space: nowrap;
+  }
+  input[type=text], input[type=number], input[type=date], input[type=time], textarea, select {
+    font: inherit; width: 100%; padding: 11px 12px; border: 1px solid var(--line);
+    border-radius: 10px; background: var(--field); color: var(--ink); -webkit-appearance: none; appearance: none;
+  }
+  select {
+    padding-right: 34px;
+    background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+    background-position: calc(100% - 18px) calc(50% - 2px), calc(100% - 13px) calc(50% - 2px);
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+  }
+  input:focus, textarea:focus, select:focus, button:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 1px;
+  }
+  textarea { min-height: 64px; resize: vertical; }
+  .seg { display: inline-flex; flex-wrap: wrap; gap: 8px; }
+  .seg label {
+    display: inline-flex; align-items: center; gap: 7px; padding: 9px 14px; min-height: 44px;
+    border: 1px solid var(--line); border-radius: 10px; cursor: pointer; background: var(--field); user-select: none;
+  }
+  .seg label:has(input:checked) { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--field)); }
+  .seg input { accent-color: var(--accent); width: 18px; height: 18px; }
+  .checks { display: flex; flex-direction: column; gap: 8px; }
+  .checks label {
+    display: flex; align-items: center; gap: 10px; padding: 9px 12px; min-height: 44px;
+    border: 1px solid var(--line); border-radius: 10px; cursor: pointer; background: var(--field);
+  }
+  .checks label:has(input:checked) { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--field)); }
+  .checks input { accent-color: var(--accent); width: 18px; height: 18px; }
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table.grid { border-collapse: collapse; width: 100%; min-width: 520px; }
+  table.grid th { text-align: left; font-size: 12.5px; color: var(--muted); font-weight: 600; padding: 6px 6px; }
+  table.grid td { padding: 3px 4px; vertical-align: top; }
+  table.grid.data th, table.grid.data td { border: 1px solid var(--line); padding: 6px 9px; font-size: 13.5px; white-space: nowrap; }
+  table.grid input { padding: 8px 9px; }
+  .rowbtn { margin-top: 8px; }
+  .btn {
+    font: inherit; font-weight: 600; padding: 12px 18px; min-height: 48px; border-radius: 10px;
+    border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); cursor: pointer;
+  }
+  .btn.secondary { background: transparent; color: var(--accent); }
+  .btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .btn.small { min-height: 40px; padding: 8px 14px; font-size: 14px; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+  .hint { color: var(--muted); font-size: 13px; margin-top: 6px; }
+  .warnbox { background: var(--warn-bg); border: 1px solid color-mix(in srgb, var(--warn) 40%, var(--line)); color: var(--ink); border-radius: 10px; padding: 10px 12px; font-size: 14px; }
+  .hidden { display: none !important; }
+  /* result / QR */
+  .qr-grid { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; }
+  .qr-card { background: #fff; border-radius: 12px; padding: 12px; text-align: center; border: 1px solid var(--line); }
+  .qr-card svg { width: min(72vw, 300px); height: auto; display: block; }
+  .qr-card .cap { color: #333; font-size: 13px; margin-top: 6px; font-weight: 600; }
+  .qr-clickable { cursor: pointer; transition: border-color .12s, transform .12s; }
+  .qr-clickable:hover, .qr-clickable:focus-visible { border-color: var(--accent); transform: translateY(-2px); }
+  .qr-focus { display: flex; flex-direction: column; align-items: center; }
+  .qr-focus-card svg { width: min(86vw, 440px); }
+  .codebox { width: 100%; font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; word-break: break-all; }
+  .out { white-space: pre-wrap; font: 13.5px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+         background: var(--field); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+  .ids { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-bottom: 12px; }
+  .ids .id { font-size: 14px; }
+  .ids .id b { display: block; font-size: 12px; color: var(--muted); font-weight: 600; }
+  .status { font-size: 14px; color: var(--muted); min-height: 20px; }
+  .status.ok { color: var(--ok); }
+  .status.err { color: var(--warn); }
+  video { width: 100%; max-width: 420px; border-radius: 12px; background: #000; display: block; }
+  .subtabs { display: inline-flex; gap: 6px; margin: 12px 0 8px; }
+  .subtabs button { font: inherit; font-size: 13px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; }
+  .subtabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  footer.foot { max-width: 760px; margin: 8px auto 32px; padding: 0 16px; color: var(--muted); font-size: 12.5px; }
+  .center { text-align: center; }
+</style>
+</head>
+<body>
+<header class="appbar">
+  <h1 id="app-title">Epilepsy Pre-Consult Questionnaire</h1>
+  <div class="tabs">
+    <button id="theme-toggle" class="theme-btn" type="button" aria-label="Switch color theme">Theme: Auto</button>
+  </div>
+</header>
+
+<main id="main"></main>
+<footer class="foot">
+  Runs entirely on this device. Nothing you enter is uploaded or sent anywhere. Closing or refreshing the page discards the answers.
+</footer>
+
+<!-- ===================== vendored library (inlined, offline) ===================== -->
+<script>/*__QRLIB_JS__*/</script>
+
+<!-- ===================== application ===================== -->
+<script>
+"use strict";
+/*__SCHEMA__*/
+
+/* ---------- small DOM helpers ---------- */
+function h(tag, attrs, kids) {
+  var e = document.createElement(tag);
+  if (attrs) for (var k in attrs) {
+    if (k === "class") e.className = attrs[k];
+    else if (k === "html") e.innerHTML = attrs[k];
+    else if (k === "text") e.textContent = attrs[k];
+    else if (k.slice(0, 2) === "on" && typeof attrs[k] === "function") e.addEventListener(k.slice(2), attrs[k]);
+    else if (attrs[k] != null && attrs[k] !== false) e.setAttribute(k, attrs[k]);
+  }
+  if (kids != null) (Array.isArray(kids) ? kids : [kids]).forEach(function (c) {
+    if (c == null || c === false) return;
+    e.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+  });
+  return e;
+}
+var $ = function (s, r) { return (r || document).querySelector(s); };
+
+/* ---------- byte / base64url / crc ---------- */
+function bytesToB64url(u8) {
+  var s = "", CH = 0x8000;
+  for (var i = 0; i < u8.length; i += CH) s += String.fromCharCode.apply(null, u8.subarray(i, i + CH));
+  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function b64urlToBytes(str) {
+  str = str.replace(/-/g, "+").replace(/_/g, "/");
+  while (str.length % 4) str += "=";
+  var bin = atob(str), u8 = new Uint8Array(bin.length);
+  for (var i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+  return u8;
+}
+var CRC_TABLE = (function () {
+  var t = new Uint32Array(256);
+  for (var n = 0; n < 256; n++) { var c = n; for (var k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); t[n] = c >>> 0; }
+  return t;
+})();
+function crc32(str) {
+  var c = 0xFFFFFFFF;
+  for (var i = 0; i < str.length; i++) c = CRC_TABLE[(c ^ str.charCodeAt(i)) & 0xFF] ^ (c >>> 8);
+  return ((c ^ 0xFFFFFFFF) >>> 0).toString(16).padStart(8, "0");
+}
+
+/* ---------- deflate via streams (graceful fallback) ---------- */
+async function streamThrough(Ctor, mode, u8) {
+  var s = new Ctor(mode), w = s.writable.getWriter();
+  w.write(u8); w.close();
+  var buf = await new Response(s.readable).arrayBuffer();
+  return new Uint8Array(buf);
+}
+async function deflateRaw(u8) {
+  if (typeof CompressionStream === "undefined") return null;
+  try { return await streamThrough(CompressionStream, "deflate-raw", u8); } catch (e) { return null; }
+}
+async function inflateRaw(u8) {
+  if (typeof DecompressionStream === "undefined") throw new Error("This browser cannot decompress the code. Use a current version of Chrome, Edge, Firefox or Safari.");
+  return await streamThrough(DecompressionStream, "deflate-raw", u8);
+}
+
+/* ---------- codec: answers <-> document string (base64url) ---------- */
+var MAGIC = "EQ1";
+async function encodeAnswers(answers) {
+  var raw = new TextEncoder().encode(JSON.stringify(answers));
+  var flags = 0, body = raw;
+  var def = await deflateRaw(raw);
+  if (def && def.length < raw.length) { flags |= 1; body = def; }
+  var payload = new Uint8Array(body.length + 2);
+  payload[0] = SCHEMA.version & 0xFF; payload[1] = flags; payload.set(body, 2);
+  return bytesToB64url(payload);
+}
+async function decodeDoc(D) {
+  var payload = b64urlToBytes(D);
+  var flags = payload[1], body = payload.subarray(2);
+  if (flags & 1) body = await inflateRaw(body);
+  return JSON.parse(new TextDecoder().decode(body));
+}
+function docHeader(D) { var b = b64urlToBytes(D); return { ver: b[0], flags: b[1] }; }
+
+/* ---------- QR framing ---------- */
+var SINGLE_MAX = 600, CHUNK = 480;
+function buildFrames(D) {
+  var single = MAGIC + "|" + D;
+  if (single.length <= SINGLE_MAX) return { frames: [single], code: single, multi: false };
+  var docId = Math.floor(Math.random() * 0x10000).toString(16).padStart(4, "0");
+  var crc = crc32(D), n = Math.ceil(D.length / CHUNK), frames = [];
+  for (var i = 0; i < n; i++) frames.push(MAGIC + "F|" + docId + "|" + (i + 1) + "|" + n + "|" + crc + "|" + D.slice(i * CHUNK, (i + 1) * CHUNK));
+  return { frames: frames, code: MAGIC + "|" + D, multi: true };
+}
+
+/* ---------- QR rendering (SVG, always dark-on-light for scanning) ---------- */
+function qrSvg(text, ec) {
+  var qr = qrcode(0, ec || "M");
+  qr.addData(text, "Byte");
+  qr.make();
+  var n = qr.getModuleCount(), m = 4, size = n + m * 2, d = "";
+  for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) if (qr.isDark(r, c)) d += "M" + (c + m) + "," + (r + m) + "h1v1h-1z";
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + size + " " + size + '" shape-rendering="crispEdges" role="img" aria-label="QR code">' +
+    '<rect width="' + size + '" height="' + size + '" fill="#ffffff"/><path d="' + d + '" fill="#000000"/></svg>';
+  var wrap = document.createElement("div");
+  wrap.innerHTML = svg;
+  return wrap.firstChild;
+}
+
+/* ================================================================= *
+ *  PATIENT MODE                                                     *
+ * ================================================================= */
+function evalShowIf(expr, answers) {
+  var m = /^(\w+)==(.+)$/.exec(expr);
+  if (!m) return true;
+  return answers[m[1]] === m[2];
+}
+function collectAnswers(root) {
+  var answers = {};
+  SCHEMA.sections.forEach(function (sec) {
+    sec.fields.forEach(function (f) {
+      var wrap = $('[data-field="' + f.id + '"]', root);
+      if (!wrap || wrap.classList.contains("hidden")) return;
+      var v = readField(f, wrap);
+      if (v !== undefined && v !== "" && !(Array.isArray(v) && v.length === 0)) answers[f.id] = v;
+    });
+  });
+  return answers;
+}
+function readField(f, wrap) {
+  if (f.type === "yesno" || f.type === "enum") {
+    var sel = $('input:checked', wrap); return sel ? sel.value : undefined;
+  }
+  if (f.type === "multiselect") {
+    return Array.prototype.map.call(wrap.querySelectorAll("input:checked"), function (i) { return i.value; });
+  }
+  if (f.type === "table") {
+    var rows = [];
+    Array.prototype.forEach.call(wrap.querySelectorAll("tbody tr"), function (tr) {
+      var row = {}, any = false;
+      Array.prototype.forEach.call(tr.querySelectorAll("input"), function (inp) {
+        var val = inp.value.trim();
+        if (val) { row[inp.getAttribute("data-col")] = val; any = true; }
+      });
+      if (any) rows.push(row);
+    });
+    return rows.length ? rows : undefined;
+  }
+  var el = $("input,textarea,select", wrap);
+  return el ? el.value.trim() : undefined;
+}
+
+function applyConditionals(root) {
+  var answers = collectAnswersRaw(root);
+  SCHEMA.sections.forEach(function (sec) {
+    sec.fields.forEach(function (f) {
+      if (!f.showIf) return;
+      var wrap = $('[data-field="' + f.id + '"]', root);
+      if (!wrap) return;
+      wrap.classList.toggle("hidden", !evalShowIf(f.showIf, answers));
+    });
+  });
+}
+function collectAnswersRaw(root) {
+  // like collectAnswers but ignores visibility (used to drive conditionals)
+  var answers = {};
+  SCHEMA.sections.forEach(function (sec) {
+    sec.fields.forEach(function (f) {
+      var wrap = $('[data-field="' + f.id + '"]', root);
+      if (!wrap) return;
+      var v = readField(f, wrap);
+      if (v !== undefined) answers[f.id] = v;
+    });
+  });
+  return answers;
+}
+
+function fieldControl(f) {
+  if (f.type === "yesno") {
+    return h("div", { class: "seg", role: "radiogroup" }, ["yes", "no"].map(function (opt) {
+      return h("label", null, [h("input", { type: "radio", name: f.id, value: opt }), opt === "yes" ? "Yes" : "No"]);
+    }));
+  }
+  if (f.type === "enum") {
+    return h("div", { class: "seg", role: "radiogroup" }, (f.options || []).map(function (opt) {
+      return h("label", null, [h("input", { type: "radio", name: f.id, value: opt }), opt]);
+    }));
+  }
+  if (f.type === "multiselect") {
+    return h("div", { class: "checks" }, (f.options || []).map(function (opt) {
+      return h("label", null, [h("input", { type: "checkbox", name: f.id, value: opt }), opt]);
+    }));
+  }
+  if (f.type === "select") {
+    var opts = [h("option", { value: "" }, f.placeholder || "Choose...")];
+    (f.options || []).forEach(function (opt) { opts.push(h("option", { value: opt }, opt)); });
+    return h("select", { id: f.id }, opts);
+  }
+  if (f.type === "textarea") return h("textarea", { id: f.id });
+  if (f.type === "number") {
+    var a = { type: "number", id: f.id, inputmode: "decimal" };
+    if (f.min != null) a.min = f.min; if (f.max != null) a.max = f.max; if (f.step != null) a.step = f.step;
+    return h("input", a);
+  }
+  if (f.type === "date") return h("input", { type: "date", id: f.id });
+  if (f.type === "time") return h("input", { type: "time", id: f.id });
+  if (f.type === "table") return tableControl(f);
+  return h("input", { type: "text", id: f.id });
+}
+function tableControl(f) {
+  var tbody = h("tbody");
+  function addRow() {
+    if (tbody.children.length >= (f.maxRows || 4)) return;
+    tbody.appendChild(h("tr", null, f.columns.map(function (col) {
+      return h("td", null, h("input", { type: "text", "data-col": col, "aria-label": f.label + " " + col }));
+    })));
+  }
+  addRow();
+  var addBtn = h("button", { type: "button", class: "btn ghost small rowbtn", onclick: function () { addRow(); } }, "Add another row");
+  return h("div", { class: "table-wrap" }, [
+    h("table", { class: "grid" }, [
+      h("thead", null, h("tr", null, f.columns.map(function (c) { return h("th", null, c); }))),
+      tbody
+    ]),
+    addBtn
+  ]);
+}
+
+function renderPatient() {
+  var frag = document.createDocumentFragment();
+  frag.appendChild(h("div", { class: "note-banner" }, [
+    h("strong", null, "Please answer as best you can. "),
+    "Leave anything blank if you are not sure. When you finish, a code appears for you to show your provider. ",
+    h("strong", null, "Nothing you enter leaves this device.")
+  ]));
+
+  var form = h("form", { id: "qform", autocomplete: "off", onsubmit: function (e) { e.preventDefault(); } });
+  SCHEMA.sections.forEach(function (sec) {
+    var card = h("section", { class: "card" }, [h("h2", null, sec.title)]);
+    if (sec.intro) card.appendChild(h("p", { class: "intro" }, sec.intro));
+    sec.fields.forEach(function (f) {
+      var qlabel = h("div", { class: "q" }, [
+        f.label,
+        f.required ? h("span", { class: "req", title: "required", text: " *" }) : null,
+        f.added ? h("span", { class: "added-tag", text: "added" }) : null
+      ]);
+      card.appendChild(h("div", { class: "field", "data-field": f.id }, [qlabel, fieldControl(f)]));
+    });
+    form.appendChild(card);
+  });
+  frag.appendChild(form);
+
+  var finish = h("button", { class: "btn", type: "button", onclick: onFinish }, "Finish and show my code");
+  frag.appendChild(h("section", { class: "card" }, [h("div", { class: "actions" }, finish)]));
+
+  form.addEventListener("input", function () { applyConditionals(form); });
+  form.addEventListener("change", function () { applyConditionals(form); });
+
+  var main = $("#main"); main.innerHTML = ""; main.appendChild(frag);
+  applyConditionals(form);
+}
+
+async function onFinish() {
+  var form = $("#qform");
+  applyConditionals(form);
+  var answers = collectAnswers(form);
+  answers._meta = { v: SCHEMA.version, completed: localStamp() };
+  var D = await encodeAnswers(answers);
+  showResult(D, answers);
+}
+function localStamp() {
+  var d = new Date(), p = function (n) { return String(n).padStart(2, "0"); };
+  return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes());
+}
+
+function qrSection(built) {
+  var wrap = h("div", {});
+  if (!built.multi) {
+    wrap.appendChild(h("div", { class: "qr-grid" }, h("div", { class: "qr-card" }, qrSvg(built.frames[0], "M"))));
+    return wrap;
+  }
+  var n = built.frames.length, idx = 0;
+  var grid = h("div", { class: "qr-grid" });
+  var focus = h("div", { class: "qr-focus hidden" });
+  function showGrid() { focus.classList.add("hidden"); focus.innerHTML = ""; grid.classList.remove("hidden"); }
+  function showFocus(i) {
+    idx = (i + n) % n;
+    focus.innerHTML = "";
+    focus.appendChild(h("div", { class: "qr-card qr-focus-card qr-clickable", role: "button", tabindex: "0", title: "Tap to show all codes",
+      onclick: showGrid, onkeydown: function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); showGrid(); } } }, [
+      qrSvg(built.frames[idx], "M"), h("div", { class: "cap" }, "Code " + (idx + 1) + " of " + n)
+    ]));
+    var nextBtn = h("button", { class: "btn small", type: "button", onclick: function () { showFocus(idx + 1); } }, "Next");
+    focus.appendChild(h("div", { class: "actions", style: "justify-content:center;margin-top:12px" }, [
+      h("button", { class: "btn secondary small", type: "button", onclick: function () { showFocus(idx - 1); } }, "Previous"),
+      nextBtn,
+      h("button", { class: "btn ghost small", type: "button", onclick: showGrid }, "Show all")
+    ]));
+    grid.classList.add("hidden");
+    focus.classList.remove("hidden");
+    if (n > 1) try { nextBtn.focus({ preventScroll: true }); } catch (e) {}
+  }
+  built.frames.forEach(function (t, i) {
+    grid.appendChild(h("div", { class: "qr-card qr-clickable", role: "button", tabindex: "0", title: "Tap to enlarge for scanning",
+      onclick: function () { showFocus(i); },
+      onkeydown: function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); showFocus(i); } } }, [
+      qrSvg(t, "M"), h("div", { class: "cap" }, "Code " + (i + 1) + " of " + n)
+    ]));
+  });
+  wrap.appendChild(grid);
+  wrap.appendChild(focus);
+  return wrap;
+}
+function showResult(D, answers) {
+  var built = buildFrames(D);
+  var main = $("#main"); main.innerHTML = "";
+  var card = h("section", { class: "card center" }, [
+    h("h2", null, "Show this to your provider"),
+    h("p", { class: "intro" }, built.multi
+      ? ("Your response uses " + built.frames.length + " codes. Tap a code to enlarge it for scanning; the others hide so a scanner reads only one at a time. If scanning does not work, use the text code button.")
+      : "Your provider scans this code, or uses the text code button if scanning does not work.")
+  ]);
+  card.appendChild(qrSection(built));
+
+  var codeArea = h("textarea", { class: "codebox", rows: 4, readonly: "readonly" }, built.code);
+  var codeWrap = h("div", { class: "hidden" }, [
+    h("p", { class: "hint" }, "Text code (if the camera will not scan). The provider pastes this into their decoder."),
+    codeArea
+  ]);
+  var copyBtn = h("button", { class: "btn secondary small", type: "button", onclick: function () {
+    codeArea.select();
+    navigator.clipboard && navigator.clipboard.writeText(built.code);
+    copyBtn.textContent = "Copied";
+    setTimeout(function () { copyBtn.textContent = "Copy text code"; }, 1500);
+  } }, "Copy text code");
+  var toggle = h("button", { class: "btn ghost small", type: "button", onclick: function () {
+    codeWrap.classList.toggle("hidden");
+    toggle.textContent = codeWrap.classList.contains("hidden") ? "Show text code" : "Hide text code";
+  } }, "Show text code");
+
+  card.appendChild(h("div", { class: "actions", style: "justify-content:center;margin-top:14px" }, [toggle, copyBtn]));
+  card.appendChild(codeWrap);
+  card.appendChild(h("div", { class: "actions", style: "justify-content:center;margin-top:16px" }, [
+    h("button", { class: "btn ghost small", type: "button", onclick: function () { renderPatient(); restoreAnswers(answers); } }, "Go back and edit"),
+    h("button", { class: "btn ghost small", type: "button", onclick: function () { if (confirm("Clear all answers and start over?")) renderPatient(); } }, "Start over")
+  ]));
+  card.appendChild(h("p", { class: "hint" }, "Nothing was uploaded. This code was created on your device."));
+  main.appendChild(card);
+  window.scrollTo(0, 0);
+}
+function restoreAnswers(answers) {
+  var form = $("#qform");
+  SCHEMA.sections.forEach(function (sec) { sec.fields.forEach(function (f) {
+    if (!(f.id in answers)) return;
+    var wrap = $('[data-field="' + f.id + '"]', form), v = answers[f.id];
+    if (!wrap) return;
+    if (f.type === "yesno" || f.type === "enum") { var r = $('input[value="' + CSS.escape(v) + '"]', wrap); if (r) r.checked = true; }
+    else if (f.type === "multiselect") { (v || []).forEach(function (opt) { var c = $('input[value="' + CSS.escape(opt) + '"]', wrap); if (c) c.checked = true; }); }
+    else if (f.type === "table") {
+      var tbody = $("tbody", wrap); tbody.innerHTML = "";
+      (v || []).forEach(function (row) {
+        tbody.appendChild(h("tr", null, f.columns.map(function (col) {
+          return h("td", null, h("input", { type: "text", "data-col": col, value: row[col] || "" }));
+        })));
+      });
+      if (!tbody.children.length) tbody.appendChild(h("tr", null, f.columns.map(function (col) { return h("td", null, h("input", { type: "text", "data-col": col })); })));
+    }
+    else { var el = $("input,textarea,select", wrap); if (el) el.value = v; }
+  }); });
+  applyConditionals(form);
+}
+
+/* ================================================================= *
+ *  PROVIDER MODE                                                    *
+ * ================================================================= */
+var frameStore = {};
+function handleCode(s) {
+  s = (s || "").trim();
+  if (!s) return { error: "Nothing to decode." };
+  if (s.indexOf(MAGIC + "|") === 0) return { done: true, D: s.slice(MAGIC.length + 1) };
+  if (s.indexOf(MAGIC + "F|") === 0) {
+    var p = s.split("|");
+    if (p.length < 6) return { error: "Damaged frame." };
+    var docId = p[1], i = parseInt(p[2], 10), n = parseInt(p[3], 10), crc = p[4], chunk = p.slice(5).join("|");
+    var rec = frameStore[docId] || (frameStore[docId] = { n: n, crc: crc, parts: {} });
+    rec.parts[i] = chunk;
+    var have = Object.keys(rec.parts).length;
+    if (have < rec.n) return { progress: { have: have, n: rec.n } };
+    var D = ""; for (var k = 1; k <= rec.n; k++) D += rec.parts[k];
+    if (crc32(D) !== rec.crc) { delete frameStore[docId]; return { error: "Checksum mismatch, please rescan the codes." }; }
+    return { done: true, D: D, progress: { have: rec.n, n: rec.n } };
+  }
+  return { error: "This does not look like a questionnaire code." };
+}
+
+var scanStream = null, scanRAF = null, scanBusy = false, seenFrames = {};
+function stopCamera() {
+  if (scanRAF) cancelAnimationFrame(scanRAF), scanRAF = null;
+  if (scanStream) { scanStream.getTracks().forEach(function (t) { t.stop(); }); scanStream = null; }
+  var v = $("#pv-video"); if (v) v.classList.add("hidden");
+  var b = $("#pv-cam"); if (b) b.textContent = "Scan with camera";
+}
+async function toggleCamera() {
+  var btn = $("#pv-cam");
+  if (scanStream) { stopCamera(); return; }
+  var video = $("#pv-video");
+  try {
+    scanStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+  } catch (e) {
+    setStatus("Camera unavailable (" + e.name + "). Use Photo or Paste instead.", "err"); return;
+  }
+  video.srcObject = scanStream; video.classList.remove("hidden");
+  await video.play().catch(function () {});
+  btn.textContent = "Stop camera";
+  var bd = null;
+  if ("BarcodeDetector" in window) {
+    try { var fmts = await window.BarcodeDetector.getSupportedFormats(); if (fmts.indexOf("qr_code") >= 0) bd = new window.BarcodeDetector({ formats: ["qr_code"] }); } catch (e) {}
+  }
+  var canvas = document.createElement("canvas"), ctx = canvas.getContext("2d", { willReadFrequently: true });
+  var tick = async function () {
+    if (!scanStream) return;
+    if (!scanBusy && video.readyState >= 2 && video.videoWidth) {
+      scanBusy = true;
+      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      var value = null;
+      if (bd) { try { var codes = await bd.detect(canvas); if (codes.length) value = codes[0].rawValue; } catch (e) {} }
+      if (!value) { try { var img = ctx.getImageData(0, 0, canvas.width, canvas.height); var r = jsQR(img.data, img.width, img.height, { inversionAttempts: "dontInvert" }); if (r) value = r.data; } catch (e) {} }
+      if (value) onScanValue(value);
+      scanBusy = false;
+    }
+    scanRAF = requestAnimationFrame(tick);
+  };
+  tick();
+}
+function decodeImageFile(file, onValue) {
+  onValue = onValue || onScanValue;
+  var img = new Image();
+  img.onload = function () {
+    var canvas = document.createElement("canvas"), ctx = canvas.getContext("2d", { willReadFrequently: true });
+    canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+    ctx.drawImage(img, 0, 0);
+    try { var d = ctx.getImageData(0, 0, canvas.width, canvas.height); var r = jsQR(d.data, d.width, d.height, { inversionAttempts: "attemptBoth" }); if (r) onValue(r.data); else setStatus("No QR code found in that image.", "err"); }
+    catch (e) { setStatus("Could not read that image.", "err"); }
+    URL.revokeObjectURL(img.src);
+  };
+  img.onerror = function () { setStatus("Could not open that image.", "err"); };
+  img.src = URL.createObjectURL(file);
+}
+function onScanValue(value) {
+  if (seenFrames[value]) return;      // ignore repeated reads of the same frame
+  var res = handleCode(value);
+  if (res.error) { setStatus(res.error, "err"); return; }
+  seenFrames[value] = true;
+  if (res.done) {
+    stopCamera();
+    setStatus((res.progress ? "All " + res.progress.n + " codes captured. " : "") + "Decoding...", "ok");
+    finishDecode(res.D);
+  } else if (res.progress) {
+    setStatus("Captured " + res.progress.have + " of " + res.progress.n + " codes, keep scanning...", "ok");
+  }
+}
+async function finishDecode(D) {
+  var answers;
+  try { answers = await decodeDoc(D); } catch (e) { setStatus("Could not decode: " + e.message, "err"); return; }
+  frameStore = {}; seenFrames = {};
+  setStatus("");
+  renderOutput(answers, D, docHeader(D).ver);
+}
+function setStatus(msg, kind) {
+  var s = $("#pv-status"); if (!s) return;
+  s.textContent = msg; s.className = "status" + (kind ? " " + kind : "");
+}
+
+function renderProvider() {
+  frameStore = {}; seenFrames = {};
+  stopCamera();
+  var main = $("#main"); main.innerHTML = "";
+  var sub = h("div", { class: "subtabs", role: "tablist", "aria-label": "Provider view" });
+  var container = h("div", {});
+  function select(which, btn) {
+    Array.prototype.forEach.call(sub.children, function (b) { b.setAttribute("aria-selected", "false"); });
+    if (btn) btn.setAttribute("aria-selected", "true");
+    stopCamera();
+    container.innerHTML = "";
+    if (which === "trends") renderTrendsView(container); else renderDecodeView(container);
+  }
+  [["decode", "Decode a visit"], ["trends", "Trends across visits"]].forEach(function (p, i) {
+    var b = h("button", { role: "tab", "aria-selected": i === 0 ? "true" : "false", onclick: function () { select(p[0], b); } }, p[1]);
+    sub.appendChild(b);
+  });
+  main.appendChild(sub);
+  main.appendChild(container);
+  renderDecodeView(container);
+}
+
+function renderDecodeView(container) {
+  frameStore = {}; seenFrames = {};
+  container.appendChild(h("div", { class: "note-banner" }, [
+    h("strong", null, "Read one patient's completed questionnaire. "),
+    "Scan their code with this device's camera, take a photo of it, or paste the text code. Decoding happens on this computer; nothing is sent anywhere."
+  ]));
+  var fileInput = h("input", { type: "file", accept: "image/*", capture: "environment", class: "hidden",
+    onchange: function (e) { if (e.target.files[0]) decodeImageFile(e.target.files[0], onScanValue); e.target.value = ""; } });
+  var paste = h("textarea", { class: "codebox", id: "pv-paste", rows: 4, placeholder: "Paste the text code here (starts with EQ1|)" });
+  var scanIn = h("input", { type: "text", id: "pv-scan", class: "codebox", autocomplete: "off", spellcheck: "false",
+    placeholder: "Handheld scanner: click here, then scan (reads one code per scan)",
+    onkeydown: function (e) { if (e.key === "Enter") { e.preventDefault(); var v = scanIn.value.trim(); scanIn.value = ""; if (v) onScanValue(v); } } });
+  container.appendChild(h("section", { class: "card" }, [
+    h("div", { class: "actions" }, [
+      h("button", { class: "btn", id: "pv-cam", type: "button", onclick: toggleCamera }, "Scan with camera"),
+      h("button", { class: "btn secondary", type: "button", onclick: function () { fileInput.click(); } }, "Take or upload photo"),
+      fileInput
+    ]),
+    h("video", { id: "pv-video", class: "hidden", playsinline: "", muted: "" }),
+    h("div", { id: "pv-status", class: "status" }),
+    h("div", { style: "margin-top:12px" }, [
+      scanIn,
+      h("p", { class: "hint" }, "For a clinic 2D barcode (imager) scanner used as a keyboard. A 1D laser scanner cannot read QR codes.")
+    ]),
+    h("details", { style: "margin-top:10px" }, [
+      h("summary", { style: "cursor:pointer;color:var(--muted)" }, "Paste text code instead"),
+      paste,
+      h("div", { class: "actions" }, h("button", { class: "btn secondary small", type: "button",
+        onclick: function () { onScanValue(paste.value); } }, "Decode pasted code"))
+    ])
+  ]));
+  container.appendChild(h("section", { class: "card hidden", id: "pv-out" }));
+}
+
+// Resolve the field id used as a patient identifier, by role ("name" or "dob"),
+// with a fallback to the legacy fixed ids so older forms keep working.
+function identityId(role) {
+  var found = null;
+  SCHEMA.sections.forEach(function (s) { s.fields.forEach(function (f) { if (f.role === role) found = f.id; }); });
+  if (found) return found;
+  var legacy = role === "name" ? "patient_name" : (role === "dob" ? "patient_dob" : null);
+  if (legacy) { var has = false; SCHEMA.sections.forEach(function (s) { s.fields.forEach(function (f) { if (f.id === legacy) has = true; }); }); if (has) return legacy; }
+  return null;
+}
+function valText(f, v) {
+  if (f.type === "yesno") return v === "yes" ? "Yes" : (v === "no" ? "No" : String(v));
+  if (f.type === "multiselect") return Array.isArray(v) ? v.join(", ") : String(v);
+  return String(v);
+}
+function knownIds() {
+  var s = {};
+  SCHEMA.sections.forEach(function (sec) { sec.fields.forEach(function (f) { s[f.id] = true; }); });
+  return s;
+}
+function extraKeys(answers) {
+  var known = knownIds();
+  return Object.keys(answers).filter(function (k) { return k.charAt(0) !== "_" && !known[k]; });
+}
+function stringifyVal(v) {
+  return Array.isArray(v) ? v.join(", ") : (v && typeof v === "object" ? JSON.stringify(v) : String(v));
+}
+function buildReadable(answers) {
+  var lines = [SCHEMA.title.toUpperCase() + " (patient-entered)"];
+  if (answers._meta && answers._meta.completed) lines.push("Completed by patient: " + answers._meta.completed);
+  lines.push("");
+  SCHEMA.sections.forEach(function (sec) {
+    var body = [];
+    sec.fields.forEach(function (f) {
+      if (!(f.id in answers)) return;
+      var v = answers[f.id];
+      if (f.type === "table") {
+        if (!Array.isArray(v) || !v.length) return;
+        body.push(f.label + ":");
+        v.forEach(function (row, i) {
+          var cells = f.columns.map(function (c) { return row[c] ? c + ": " + row[c] : null; }).filter(Boolean);
+          if (cells.length) body.push("  " + (i + 1) + ". " + cells.join("; "));
+        });
+      } else {
+        var t = valText(f, v); if (t === "" || t == null) return;
+        body.push(f.label + " " + t);
+      }
+    });
+    if (body.length) { lines.push("== " + sec.title.toUpperCase() + " =="); lines.push.apply(lines, body); lines.push(""); }
+  });
+  var extra = extraKeys(answers);
+  if (extra.length) {
+    lines.push("== OTHER ITEMS (not in this version of the form) ==");
+    extra.forEach(function (k) { lines.push(k + ": " + stringifyVal(answers[k])); });
+    lines.push("");
+  }
+  return lines.join("\n").replace(/\n+$/, "\n");
+}
+function buildCompact(answers) {
+  var out = [];
+  var idParts = [];
+  ["name", "dob"].forEach(function (role) { var id = identityId(role); if (id && answers[id]) idParts.push(answers[id]); });
+  var head = "Patient-entered: " + SCHEMA.title;
+  if (answers._meta && answers._meta.completed) head += " [" + answers._meta.completed + "]";
+  out.push(head + (idParts.length ? " - " + idParts.join(", ") : "") + ".");
+  SCHEMA.sections.forEach(function (sec) {
+    if (sec.id === "identification") return;
+    var items = [];
+    sec.fields.forEach(function (f) {
+      if (!(f.id in answers)) return;
+      var v = answers[f.id];
+      if (f.type === "table") {
+        if (!Array.isArray(v) || !v.length) return;
+        var rows = v.map(function (row) { return f.columns.map(function (c) { return row[c]; }).filter(Boolean).join("/"); });
+        items.push(f.label.toLowerCase() + ": " + rows.join(" | "));
+      } else {
+        var t = valText(f, v); if (t === "" || t == null) return;
+        items.push(shortLabel(f) + " " + t);
+      }
+    });
+    if (items.length) out.push(sec.title + ": " + items.join("; ") + ".");
+  });
+  var extra = extraKeys(answers);
+  if (extra.length) out.push("Other items: " + extra.map(function (k) { return k + " " + stringifyVal(answers[k]); }).join("; ") + ".");
+  return out.join("\n");
+}
+function shortLabel(f) {
+  return f.label.replace(/^(Do you have|Do you|Did you|Have you|Are you|Was|Were|Is there|Any|On average, )/i, "").replace(/\?$/, "").trim();
+}
+
+function renderOutput(answers, D, ver) {
+  var out = $("#pv-out"); out.className = "card"; out.innerHTML = "";
+  var ids = h("div", { class: "ids" });
+  [["name", "Name"], ["dob", "Date of birth"]].forEach(function (p) {
+    var id = identityId(p[0]);
+    if (id && answers[id]) ids.appendChild(h("div", { class: "id" }, [h("b", null, p[1]), answers[id]]));
+  });
+  out.appendChild(h("h2", null, "Decoded questionnaire"));
+  out.appendChild(ids);
+  if (ver != null && ver !== SCHEMA.version) out.appendChild(h("div", { class: "warnbox" },
+    "This code was made with form version " + ver + "; this tool is version " + SCHEMA.version + ". Known items are shown; anything unrecognized is listed under OTHER ITEMS below."));
+
+  var pane = h("pre", { class: "out", id: "pv-pane" });
+  var views = { Readable: buildReadable(answers), Compact: buildCompact(answers) };
+  pane.textContent = views.Readable;
+  var tabs = h("div", { class: "subtabs" });
+  ["Readable", "Compact"].forEach(function (name, i) {
+    tabs.appendChild(h("button", { role: "tab", "aria-selected": i === 0 ? "true" : "false",
+      onclick: function () {
+        pane.textContent = views[name];
+        Array.prototype.forEach.call(tabs.children, function (b) { b.setAttribute("aria-selected", "false"); });
+        this.setAttribute("aria-selected", "true");
+      } }, name));
+  });
+  var copy = h("button", { class: "btn small", type: "button", onclick: function () {
+    navigator.clipboard && navigator.clipboard.writeText(pane.textContent);
+    copy.textContent = "Copied"; setTimeout(function () { copy.textContent = "Copy for note"; }, 1500);
+  } }, "Copy for note");
+  out.appendChild(h("div", { class: "actions", style: "align-items:center" }, [tabs]));
+  out.appendChild(pane);
+  out.appendChild(h("div", { class: "actions", style: "margin-top:12px" }, [
+    copy,
+    h("button", { class: "btn ghost small", type: "button", onclick: function () { renderProvider(); } }, "Read another")
+  ]));
+
+  if (D) {
+    var code = MAGIC + "|" + D;
+    var codeArea = h("textarea", { class: "codebox", rows: 3, readonly: "readonly" }, code);
+    var codeCopy = h("button", { class: "btn secondary small", type: "button", onclick: function () {
+      codeArea.select(); navigator.clipboard && navigator.clipboard.writeText(code);
+      codeCopy.textContent = "Copied"; setTimeout(function () { codeCopy.textContent = "Copy visit code"; }, 1500);
+    } }, "Copy visit code");
+    out.appendChild(h("details", { style: "margin-top:12px" }, [
+      h("summary", { style: "cursor:pointer;color:var(--muted)" }, "Visit code (save in the note to enable trends)"),
+      h("p", { class: "hint" }, "Paste this line into the note. Next visit, paste all saved visit codes into the Trends tab to chart change over time."),
+      codeArea,
+      h("div", { class: "actions" }, codeCopy)
+    ]));
+  }
+  out.appendChild(h("p", { class: "hint" }, "Paste this into the patient's Epic note. Decoded locally on this computer."));
+  out.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+/* ---------- trends across visits ---------- */
+// Trend metrics are every numeric field in the form, derived from the schema.
+var TREND_METRICS = (function () {
+  var out = [];
+  SCHEMA.sections.forEach(function (s) { s.fields.forEach(function (f) { if (f.type === "number") out.push({ id: f.id, label: f.label, unit: "" }); }); });
+  return out;
+})();
+function parseVisitDate(answers) {
+  var s = (answers._meta && answers._meta.completed) || "";
+  var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
+  return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null;
+}
+function visitDateLabel(answers) {
+  var s = (answers._meta && answers._meta.completed) || "";
+  return s.split(" ")[0] || "unknown";
+}
+function extractVisit(answers) {
+  var nameId = identityId("name");
+  var rec = { date: parseVisitDate(answers), label: visitDateLabel(answers), name: (nameId && answers[nameId]) || "", metrics: {} };
+  TREND_METRICS.forEach(function (m) {
+    var v = answers[m.id];
+    if (v !== undefined && v !== "" && !isNaN(parseFloat(v))) rec.metrics[m.id] = parseFloat(v);
+  });
+  return rec;
+}
+function fmtNum(x) { return (Math.round(x * 10) / 10).toString(); }
+function xmlEsc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+function trendChart(series) {
+  var W = 560, H = 130, padL = 44, padR = 14, padT = 16, padB = 28, n = series.length;
+  var ys = series.map(function (s) { return s.y; });
+  var ymin = Math.min.apply(null, ys), ymax = Math.max.apply(null, ys);
+  if (ymin === ymax) { ymax = ymin + 1; ymin = Math.min(0, ymin); }
+  var xOf = function (i) { return n === 1 ? (padL + (W - padL - padR) / 2) : (padL + (W - padL - padR) * i / (n - 1)); };
+  var yOf = function (v) { return padT + (H - padT - padB) * (1 - (v - ymin) / (ymax - ymin)); };
+  var pts = series.map(function (s, i) { return xOf(i) + "," + yOf(s.y); });
+  var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:auto;color:var(--accent)" role="img" aria-label="trend chart">';
+  svg += '<line x1="' + padL + '" y1="' + yOf(ymin) + '" x2="' + (W - padR) + '" y2="' + yOf(ymin) + '" stroke="var(--line)"/>';
+  svg += '<text x="' + (padL - 6) + '" y="' + (yOf(ymax) + 4) + '" text-anchor="end" font-size="10" fill="var(--muted)">' + fmtNum(ymax) + '</text>';
+  svg += '<text x="' + (padL - 6) + '" y="' + (yOf(ymin) + 4) + '" text-anchor="end" font-size="10" fill="var(--muted)">' + fmtNum(ymin) + '</text>';
+  if (n > 1) svg += '<polyline points="' + pts.join(" ") + '" fill="none" stroke="currentColor" stroke-width="2"/>';
+  series.forEach(function (s, i) {
+    svg += '<circle cx="' + xOf(i) + '" cy="' + yOf(s.y) + '" r="3.5" fill="currentColor"/>';
+    svg += '<text x="' + xOf(i) + '" y="' + (yOf(s.y) - 8) + '" text-anchor="middle" font-size="11" fill="currentColor">' + s.y + '</text>';
+    svg += '<text x="' + xOf(i) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="10" fill="var(--muted)">' + xmlEsc(s.x) + '</text>';
+  });
+  svg += '</svg>';
+  var wrap = document.createElement("div"); wrap.innerHTML = svg; return wrap.firstChild;
+}
+function trendSummary(visits) {
+  var lines = ["Patient-entered trend across " + visits.length + " visit(s):"];
+  TREND_METRICS.forEach(function (m) {
+    var parts = visits.filter(function (v) { return v.metrics[m.id] != null; }).map(function (v) { return v.label + " " + v.metrics[m.id] + m.unit; });
+    if (parts.length) lines.push("- " + m.label + ": " + parts.join("; "));
+  });
+  return lines.join("\n");
+}
+function renderTrendsView(container) {
+  container.appendChild(h("div", { class: "note-banner" }, [
+    h("strong", null, "Trends across visits. "),
+    "Paste each visit's text code on its own line (or add one by photo), then Show trends. Decoding happens on this computer; nothing is stored or sent. Save each visit's code in the note so the trend can be rebuilt next time."
+  ]));
+  var input = h("textarea", { class: "codebox", id: "tr-input", rows: 6, placeholder: "One visit code per line:\nEQ1|...\nEQ1|..." });
+  var status = h("div", { id: "tr-status", class: "status" });
+  var out = h("section", { class: "card hidden", id: "tr-out" });
+  var fileInput = h("input", { type: "file", accept: "image/*", capture: "environment", class: "hidden",
+    onchange: function (e) { if (e.target.files[0]) decodeImageFile(e.target.files[0], function (v) { input.value += (input.value.trim() ? "\n" : "") + v; status.textContent = "Added a code."; status.className = "status ok"; }); e.target.value = ""; } });
+  container.appendChild(h("section", { class: "card" }, [
+    input,
+    h("div", { class: "actions" }, [
+      h("button", { class: "btn", type: "button", onclick: function () { showTrends(input.value, out, status); } }, "Show trends"),
+      h("button", { class: "btn secondary", type: "button", onclick: function () { fileInput.click(); } }, "Add a code by photo"),
+      h("button", { class: "btn ghost small", type: "button", onclick: function () { input.value = ""; out.className = "card hidden"; out.innerHTML = ""; status.textContent = ""; } }, "Clear"),
+      fileInput
+    ]),
+    status
+  ]));
+  container.appendChild(out);
+}
+async function showTrends(text, out, status) {
+  var lines = text.split(/\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean);
+  if (!lines.length) { status.textContent = "Paste at least one visit code."; status.className = "status err"; return; }
+  var visits = [], failed = 0;
+  for (var i = 0; i < lines.length; i++) {
+    var s = lines[i], D;
+    if (s.indexOf(MAGIC + "F|") === 0) { failed++; continue; }        // single-line codes only here
+    D = s.indexOf(MAGIC + "|") === 0 ? s.slice(MAGIC.length + 1) : s;
+    try { visits.push(extractVisit(await decodeDoc(D))); } catch (e) { failed++; }
+  }
+  if (!visits.length) { status.textContent = "No valid codes decoded" + (failed ? " (" + failed + " could not be read)." : "."); status.className = "status err"; return; }
+  visits.sort(function (a, b) { return (a.date ? a.date.getTime() : 0) - (b.date ? b.date.getTime() : 0); });
+  status.textContent = visits.length + " visit" + (visits.length > 1 ? "s" : "") + " decoded" + (failed ? ", " + failed + " skipped" : "") + ".";
+  status.className = "status ok";
+  renderTrendOutput(out, visits);
+}
+function renderTrendOutput(out, visits) {
+  out.className = "card"; out.innerHTML = "";
+  out.appendChild(h("h2", null, "Trends across visits"));
+  if (visits[0].name) out.appendChild(h("div", { class: "ids" }, h("div", { class: "id" }, [h("b", null, "Patient"), visits[0].name])));
+  var any = false;
+  TREND_METRICS.forEach(function (m) {
+    var series = visits.filter(function (v) { return v.metrics[m.id] != null; }).map(function (v) { return { x: v.label, y: v.metrics[m.id] }; });
+    if (!series.length) return;
+    any = true;
+    out.appendChild(h("div", { class: "field" }, [h("div", { class: "q" }, m.label + (m.unit ? " (" + m.unit + ")" : "")), trendChart(series)]));
+  });
+  if (!any) out.appendChild(h("p", { class: "hint" }, "This form has no numeric fields to trend."));
+  var cols = ["Visit"].concat(TREND_METRICS.map(function (m) { return m.label; }));
+  var tbody = h("tbody", null, visits.map(function (v) {
+    var cells = [v.label];
+    TREND_METRICS.forEach(function (m) { cells.push(v.metrics[m.id] != null ? String(v.metrics[m.id]) : "-"); });
+    return h("tr", null, cells.map(function (c) { return h("td", null, c); }));
+  }));
+  out.appendChild(h("div", { class: "table-wrap" }, h("table", { class: "grid data" }, [
+    h("thead", null, h("tr", null, cols.map(function (c) { return h("th", null, c); }))), tbody
+  ])));
+  var summary = trendSummary(visits);
+  var copy = h("button", { class: "btn small", type: "button", onclick: function () {
+    navigator.clipboard && navigator.clipboard.writeText(summary);
+    copy.textContent = "Copied"; setTimeout(function () { copy.textContent = "Copy trend for note"; }, 1500);
+  } }, "Copy trend for note");
+  out.appendChild(h("pre", { class: "out", style: "margin-top:12px" }, summary));
+  out.appendChild(h("div", { class: "actions", style: "margin-top:12px" }, copy));
+  out.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+/* ================================================================= *
+ *  THEME + PAGE INIT                                                *
+ * ================================================================= */
+var THEME_KEY = "eq-theme", THEME_ORDER = ["auto", "light", "dark"], THEME_LABEL = { auto: "Theme: Auto", light: "Theme: Light", dark: "Theme: Dark" };
+function applyTheme(t) {
+  if (t === "auto") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme", t);
+  var btn = $("#theme-toggle"); if (btn) btn.textContent = THEME_LABEL[t];
+}
+function currentTheme() {
+  var t; try { t = localStorage.getItem(THEME_KEY); } catch (e) {}
+  return THEME_ORDER.indexOf(t) >= 0 ? t : "auto";
+}
+function cycleTheme() {
+  var next = THEME_ORDER[(THEME_ORDER.indexOf(currentTheme()) + 1) % THEME_ORDER.length];
+  try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+  applyTheme(next);
+}
+applyTheme(currentTheme());
+$("#theme-toggle").addEventListener("click", cycleTheme);
+
+/* PAGE is set by the build to "patient" or "provider" */
+/*__PAGE__*/
+if (typeof PAGE !== "undefined" && PAGE === "provider") {
+  document.title = SCHEMA.title + " - Provider";
+  $("#app-title").textContent = SCHEMA.title + " - Provider";
+  renderProvider();
+} else {
+  document.title = SCHEMA.title;
+  $("#app-title").textContent = SCHEMA.title;
+  renderPatient();
+}
+
+/* expose a tiny hook for automated round-trip testing */
+window.__EQ = { encodeAnswers: encodeAnswers, decodeDoc: decodeDoc, buildFrames: buildFrames, handleCode: handleCode, SCHEMA: SCHEMA };
+</script>
+</body>
+</html>

@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Form Builder</title>
+<style>
+  :root {
+    --bg:#f4f6f8; --panel:#ffffff; --ink:#14181d; --muted:#5a6672; --line:#d7dee6;
+    --accent:#1f6feb; --accent-ink:#ffffff; --field:#ffffff; --danger:#b3261e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0f1216; --panel:#171b21; --ink:#e8edf2; --muted:#9aa7b4; --line:#2a323b;
+      --accent:#4f8bf5; --accent-ink:#0a0d10; --field:#10141a; --danger:#f2b8b5; }
+  }
+  * { box-sizing:border-box; }
+  html,body { height:100%; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+    font:15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display:flex; flex-direction:column; }
+  header { background:var(--panel); border-bottom:1px solid var(--line); padding:10px 14px;
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  header h1 { font-size:15px; margin:0; font-weight:650; white-space:nowrap; }
+  header .title-wrap { display:flex; align-items:center; gap:8px; }
+  header .title-wrap input { min-width:220px; }
+  header .spacer { flex:1; }
+  input[type=text], input[type=number], select, textarea {
+    font:inherit; padding:8px 10px; border:1px solid var(--line); border-radius:8px;
+    background:var(--field); color:var(--ink); width:100%; }
+  textarea { min-height:44px; resize:vertical; }
+  .btn { font:inherit; font-weight:600; padding:8px 12px; border-radius:8px; border:1px solid var(--accent);
+    background:var(--accent); color:var(--accent-ink); cursor:pointer; white-space:nowrap; }
+  .btn.secondary { background:transparent; color:var(--accent); }
+  .btn.ghost { background:transparent; color:var(--ink); border-color:var(--line); }
+  .btn.small { padding:6px 10px; font-size:13px; }
+  .mini { font:inherit; font-size:12.5px; border:1px solid var(--line); background:transparent; color:var(--muted);
+    border-radius:6px; min-width:34px; height:28px; padding:0 8px; cursor:pointer; line-height:1; white-space:nowrap; }
+  .mini:hover { color:var(--danger); border-color:var(--danger); }
+  .split { flex:1; display:grid; grid-template-columns:minmax(380px,480px) 1fr; overflow:hidden; }
+  .pane { overflow:auto; padding:14px; }
+  .preview-pane { border-left:1px solid var(--line); display:flex; flex-direction:column; padding:0; background:var(--panel); }
+  .preview-toolbar { padding:8px 12px; border-bottom:1px solid var(--line); display:flex; gap:8px; align-items:center; font-size:13px; color:var(--muted); }
+  .preview-toolbar .seg { display:inline-flex; gap:4px; }
+  .preview-toolbar button { font:inherit; font-size:13px; padding:5px 12px; border-radius:999px; border:1px solid var(--line); background:transparent; color:var(--muted); cursor:pointer; }
+  .preview-toolbar button[aria-selected="true"] { background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+  iframe#preview { flex:1; width:100%; border:0; background:#fff; }
+  .section { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px; margin-bottom:14px; }
+  .section > .head { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+  .section > .head input { font-weight:600; }
+  .field { border:1px solid var(--line); border-radius:8px; padding:10px; margin:8px 0; background:var(--bg); }
+  .field .row { display:flex; gap:8px; align-items:center; }
+  .field .row.top { margin-bottom:8px; }
+  .field .grow { flex:1; }
+  .field .type { width:190px; flex:none; }
+  .sub { margin-top:8px; padding-top:8px; border-top:1px dashed var(--line); }
+  .sublabel { font-size:12px; color:var(--muted); font-weight:600; margin-bottom:6px; }
+  .opt-row, .col-row { display:flex; gap:6px; margin-bottom:6px; }
+  .field-opts { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:8px; font-size:13px; color:var(--muted); }
+  .field-opts label { display:inline-flex; gap:6px; align-items:center; }
+  .field-opts select { width:auto; min-width:160px; }
+  .num3 { display:flex; gap:8px; }
+  .num3 label { flex:1; font-size:12px; color:var(--muted); }
+  .addbar { display:flex; gap:8px; margin-top:6px; }
+  .hint { color:var(--muted); font-size:12.5px; }
+  .exports { display:flex; gap:6px; flex-wrap:wrap; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Form Builder</h1>
+  <div class="title-wrap"><span class="hint">Form title</span><input id="form-title" type="text"></div>
+  <div class="spacer"></div>
+  <div class="exports">
+    <button class="btn small" id="exp-patient" type="button">Export patient page</button>
+    <button class="btn small" id="exp-provider" type="button">Export provider page</button>
+    <button class="btn secondary small" id="exp-schema" type="button">Save form (.json)</button>
+    <button class="btn secondary small" id="exp-fhir" type="button">Export FHIR</button>
+    <button class="btn ghost small" id="imp-schema" type="button">Load form</button>
+    <button class="btn ghost small" id="load-example" type="button">Example</button>
+    <input id="file-input" type="file" accept="application/json,.json" style="display:none">
+  </div>
+</header>
+<main class="split">
+  <div id="editor" class="pane"></div>
+  <div class="preview-pane">
+    <div class="preview-toolbar">
+      <span>Live preview</span>
+      <span class="seg" id="prev-seg">
+        <button data-mode="patient" aria-selected="true" type="button">Patient</button>
+        <button data-mode="provider" aria-selected="false" type="button">Provider</button>
+      </span>
+      <span class="spacer" style="flex:1"></span>
+      <span class="hint">updates as you edit</span>
+    </div>
+    <iframe id="preview" sandbox="allow-scripts" title="form preview"></iframe>
+  </div>
+</main>
+
+<script>
+"use strict";
+/* embedded runtime template and QR libraries (base64) */
+var RUNTIME_B64 = "/*__RUNTIME_B64__*/";
+var QRCODE_B64 = "/*__QRCODE_B64__*/";
+var JSQR_B64 = "/*__JSQR_B64__*/";
+function b64ToStr(b64) { var bin = atob(b64), u = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new TextDecoder("utf-8").decode(u); }
+var RUNTIME = b64ToStr(RUNTIME_B64), QRCODE_SRC = b64ToStr(QRCODE_B64), JSQR_SRC = b64ToStr(JSQR_B64);
+
+/* DOM helper */
+function h(tag, attrs, kids) {
+  var e = document.createElement(tag);
+  if (attrs) for (var k in attrs) {
+    if (k === "class") e.className = attrs[k];
+    else if (k === "text") e.textContent = attrs[k];
+    else if (k.slice(0, 2) === "on" && typeof attrs[k] === "function") e.addEventListener(k.slice(2), attrs[k]);
+    else if (attrs[k] != null && attrs[k] !== false) e.setAttribute(k, attrs[k]);
+  }
+  if (kids != null) (Array.isArray(kids) ? kids : [kids]).forEach(function (c) {
+    if (c == null || c === false) return;
+    e.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+  });
+  return e;
+}
+var $ = function (s, r) { return (r || document).querySelector(s); };
+
+var FIELD_TYPES = [
+  { v: "yesno", label: "Yes / No" },
+  { v: "text", label: "Short text" },
+  { v: "textarea", label: "Long text" },
+  { v: "number", label: "Number" },
+  { v: "date", label: "Date" },
+  { v: "time", label: "Time" },
+  { v: "select", label: "Dropdown (choose one)" },
+  { v: "enum", label: "Radio buttons (choose one)" },
+  { v: "multiselect", label: "Checkboxes (choose many)" },
+  { v: "table", label: "Table (repeating rows)" }
+];
+var OPTION_TYPES = { select: 1, enum: 1, multiselect: 1 };
+
+/* ---------- schema state ---------- */
+function defaultSchema() {
+  return { version: 1, title: "New Form", sections: [
+    { id: "s1", title: "Section 1", fields: [ { id: "f1", label: "Your name", type: "text" } ] }
+  ] };
+}
+var SCHEMA = defaultSchema();
+
+function allIds() { var s = {}; SCHEMA.sections.forEach(function (sec) { s[sec.id] = 1; sec.fields.forEach(function (f) { s[f.id] = 1; }); }); return s; }
+function newId(prefix) { var ids = allIds(), n = 1; while (ids[prefix + n]) n++; return prefix + n; }
+function fieldById(id) { var found = null; SCHEMA.sections.forEach(function (s) { s.fields.forEach(function (f) { if (f.id === id) found = f; }); }); return found; }
+function yesnoFieldsBefore(targetId) {
+  var out = [], reached = false;
+  SCHEMA.sections.forEach(function (sec) { sec.fields.forEach(function (f) {
+    if (f.id === targetId) { reached = true; return; }
+    if (!reached && f.type === "yesno") out.push(f);
+  }); });
+  return out;
+}
+// remove showIf references that no longer point at a Yes/No field (deleted or retyped)
+function pruneShowIf() {
+  var yn = {};
+  SCHEMA.sections.forEach(function (s) { s.fields.forEach(function (f) { if (f.type === "yesno") yn[f.id] = 1; }); });
+  SCHEMA.sections.forEach(function (s) { s.fields.forEach(function (f) {
+    if (f.showIf) { var pid = f.showIf.split("==")[0]; if (!yn[pid]) delete f.showIf; }
+  }); });
+}
+
+/* ---------- assemble & export ---------- */
+// Escape every "<" so schema strings can never terminate the <script>, start a
+// comment, or trigger the HTML "script data double escape" state. "<" is a
+// valid JS/JSON string escape that decodes back to "<", so data is unchanged.
+function safeJson(obj) { return JSON.stringify(obj).replace(/</g, "\\u003c"); }
+function assemble(page, schema) {
+  var lib = page === "provider" ? JSQR_SRC : QRCODE_SRC;
+  // single pass: replacements are not re-scanned, so schema content that happens
+  // to contain a placeholder token cannot corrupt a later replacement.
+  return RUNTIME.replace(/\/\*__(QRLIB_JS|SCHEMA|PAGE)__\*\//g, function (m, key) {
+    if (key === "QRLIB_JS") return lib;
+    if (key === "SCHEMA") return "const SCHEMA = " + safeJson(schema) + ";";
+    return 'var PAGE = "' + page + '";';
+  });
+}
+function download(name, text, mime) {
+  var b = new Blob([text], { type: mime || "text/html" });
+  var u = URL.createObjectURL(b);
+  var a = h("a", { href: u, download: name });
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function () { URL.revokeObjectURL(u); }, 1500);
+}
+
+/* ---------- FHIR R4 Questionnaire ---------- */
+var MAX_OCCURS = "http://hl7.org/fhir/StructureDefinition/questionnaire-maxOccurs";
+function fhirItem(f) {
+  var item = { linkId: f.id, text: f.label };
+  switch (f.type) {
+    case "yesno": item.type = "boolean"; break;
+    case "select": case "enum": item.type = "choice"; item.answerOption = (f.options || []).map(function (o) { return { valueString: o }; }); break;
+    case "multiselect": item.type = "choice"; item.repeats = true; item.answerOption = (f.options || []).map(function (o) { return { valueString: o }; }); break;
+    case "textarea": item.type = "text"; break;
+    case "number": item.type = "decimal"; break;
+    case "date": item.type = "date"; break;
+    case "time": item.type = "time"; break;
+    case "table":
+      item.type = "group"; item.repeats = true;
+      item.extension = [{ url: MAX_OCCURS, valueInteger: f.maxRows || 4 }];
+      item.item = (f.columns || []).map(function (c, i) { return { linkId: f.id + ".col" + (i + 1), text: c, type: "string" }; });
+      break;
+    default: item.type = "string";
+  }
+  if (f.required) item.required = true;
+  if (f.showIf) {
+    var m = /^(\w+)==(.+)$/.exec(f.showIf);
+    if (m) {
+      var target = fieldById(m[1]);
+      var when = { question: m[1], operator: "=" };
+      if (target && target.type === "yesno") when.answerBoolean = m[2] === "yes";
+      else when.answerString = m[2];
+      item.enableWhen = [when];
+    }
+  }
+  return item;
+}
+function fhirQuestionnaire() {
+  return {
+    resourceType: "Questionnaire",
+    meta: { profile: ["http://hl7.org/fhir/StructureDefinition/Questionnaire"] },
+    version: String(SCHEMA.version || 1),
+    title: SCHEMA.title,
+    status: "draft", experimental: true, subjectType: ["Patient"],
+    item: SCHEMA.sections.map(function (sec) { return { linkId: sec.id, text: sec.title, type: "group", item: sec.fields.map(fhirItem) }; })
+  };
+}
+
+/* ---------- live preview ---------- */
+var prevMode = "patient", prevTimer = null;
+function schedulePreview() { if (prevTimer) clearTimeout(prevTimer); prevTimer = setTimeout(updatePreview, 300); }
+function updatePreview() { $("#preview").srcdoc = assemble(prevMode, SCHEMA); }
+
+/* ---------- editor ---------- */
+function bindText(el, obj, key) {
+  el.value = obj[key] != null ? obj[key] : "";
+  el.addEventListener("input", function () { obj[key] = el.value; schedulePreview(); });
+  return el;
+}
+function move(arr, i, d) { var j = i + d; if (j < 0 || j >= arr.length) return; var t = arr[i]; arr[i] = arr[j]; arr[j] = t; renderEditor(); schedulePreview(); }
+function removeAt(arr, i) { arr.splice(i, 1); renderEditor(); schedulePreview(); }
+
+function optionsEditor(f) {
+  if (!f.options) f.options = ["Option 1"];
+  var list = h("div", {});
+  f.options.forEach(function (opt, i) {
+    var input = h("input", { type: "text", value: opt });
+    input.addEventListener("input", function () { f.options[i] = input.value; schedulePreview(); });
+    list.appendChild(h("div", { class: "opt-row" }, [ input,
+      h("button", { class: "mini", type: "button", title: "Remove option", onclick: function () { f.options.splice(i, 1); renderEditor(); schedulePreview(); } }, "Remove") ]));
+  });
+  list.appendChild(h("button", { class: "btn ghost small", type: "button", onclick: function () { f.options.push("Option " + (f.options.length + 1)); renderEditor(); schedulePreview(); } }, "Add option"));
+  return h("div", { class: "sub" }, [ h("div", { class: "sublabel" }, "Choices"), list ]);
+}
+function columnsEditor(f) {
+  if (!f.columns) f.columns = ["Column 1"];
+  if (f.maxRows == null) f.maxRows = 4;
+  var list = h("div", {});
+  f.columns.forEach(function (col, i) {
+    var input = h("input", { type: "text", value: col });
+    input.addEventListener("input", function () { f.columns[i] = input.value; schedulePreview(); });
+    list.appendChild(h("div", { class: "col-row" }, [ input,
+      h("button", { class: "mini", type: "button", title: "Remove column", onclick: function () { f.columns.splice(i, 1); renderEditor(); schedulePreview(); } }, "Remove") ]));
+  });
+  list.appendChild(h("button", { class: "btn ghost small", type: "button", onclick: function () { f.columns.push("Column " + (f.columns.length + 1)); renderEditor(); schedulePreview(); } }, "Add column"));
+  var rows = h("input", { type: "number", min: 1, max: 20, value: f.maxRows, style: "width:80px" });
+  rows.addEventListener("input", function () { f.maxRows = parseInt(rows.value, 10) || 1; schedulePreview(); });
+  return h("div", { class: "sub" }, [ h("div", { class: "sublabel" }, "Columns"), list,
+    h("div", { class: "num3" }, h("label", null, ["Max rows ", rows])) ]);
+}
+function numberEditor(f) {
+  function numInput(key, label) {
+    var el = h("input", { type: "number", value: f[key] != null ? f[key] : "" });
+    el.addEventListener("input", function () { var v = el.value === "" ? undefined : parseFloat(el.value); if (v === undefined) delete f[key]; else f[key] = v; schedulePreview(); });
+    return h("label", null, [label + " ", el]);
+  }
+  return h("div", { class: "sub" }, [ h("div", { class: "sublabel" }, "Number limits (optional)"),
+    h("div", { class: "num3" }, [ numInput("min", "Min"), numInput("max", "Max"), numInput("step", "Step") ]) ]);
+}
+
+function fieldCard(sec, f, i) {
+  var typeSel = h("select", { class: "type" }, FIELD_TYPES.map(function (t) {
+    return h("option", { value: t.v }, t.label);
+  }));
+  typeSel.value = f.type;
+  typeSel.addEventListener("change", function () {
+    f.type = typeSel.value;
+    if (!OPTION_TYPES[f.type]) delete f.options;
+    if (f.type !== "table") { delete f.columns; delete f.maxRows; }
+    if (f.type !== "number") { delete f.min; delete f.max; delete f.step; }
+    if (OPTION_TYPES[f.type] && !f.options) f.options = ["Option 1"];
+    if (f.type === "table" && !f.columns) { f.columns = ["Column 1"]; f.maxRows = 4; }
+    renderEditor(); schedulePreview();
+  });
+
+  var reqBox = h("input", { type: "checkbox" });
+  reqBox.checked = !!f.required;
+  reqBox.addEventListener("change", function () { f.required = reqBox.checked; schedulePreview(); });
+
+  var yn = yesnoFieldsBefore(f.id);
+  var showSel = h("select", null, [ h("option", { value: "" }, "Always show") ].concat(yn.map(function (p) {
+    return h("option", { value: p.id }, "If \"" + (p.label || p.id) + "\" = Yes");
+  })));
+  showSel.value = f.showIf ? f.showIf.split("==")[0] : "";
+  showSel.addEventListener("change", function () { if (showSel.value) f.showIf = showSel.value + "==yes"; else delete f.showIf; schedulePreview(); });
+
+  // identity role: mark a field as the patient name or date of birth, so the
+  // provider page can pull it out for chart matching and label trend lines.
+  var roleSel = h("select", null, [
+    h("option", { value: "" }, "Normal field"),
+    h("option", { value: "name" }, "Patient name"),
+    h("option", { value: "dob" }, "Date of birth")
+  ]);
+  roleSel.value = f.role || "";
+  roleSel.addEventListener("change", function () {
+    if (roleSel.value) {
+      // a role is unique across the form; clear it from any other field
+      SCHEMA.sections.forEach(function (s) { s.fields.forEach(function (x) { if (x.role === roleSel.value) delete x.role; }); });
+      f.role = roleSel.value;
+    } else { delete f.role; }
+    schedulePreview();
+  });
+
+  var card = h("div", { class: "field" }, [
+    h("div", { class: "row top" }, [
+      bindText(h("input", { type: "text", class: "grow", placeholder: "Question label" }), f, "label"),
+      typeSel
+    ]),
+    h("div", { class: "field-opts" }, [
+      h("label", null, [reqBox, "Required"]),
+      h("label", null, ["Show ", showSel]),
+      h("label", null, ["Use as ", roleSel]),
+      h("span", { class: "spacer", style: "flex:1" }),
+      h("button", { class: "mini", type: "button", title: "Move up", onclick: function () { move(sec.fields, i, -1); } }, "Up"),
+      h("button", { class: "mini", type: "button", title: "Move down", onclick: function () { move(sec.fields, i, 1); } }, "Down"),
+      h("button", { class: "mini", type: "button", title: "Delete question", onclick: function () { removeAt(sec.fields, i); } }, "Remove")
+    ])
+  ]);
+  if (OPTION_TYPES[f.type]) card.appendChild(optionsEditor(f));
+  if (f.type === "table") card.appendChild(columnsEditor(f));
+  if (f.type === "number") card.appendChild(numberEditor(f));
+  return card;
+}
+
+function sectionCard(sec, si) {
+  var card = h("div", { class: "section" }, [
+    h("div", { class: "head" }, [
+      bindText(h("input", { type: "text", placeholder: "Section title" }), sec, "title"),
+      h("button", { class: "mini", type: "button", title: "Move section up", onclick: function () { move(SCHEMA.sections, si, -1); } }, "Up"),
+      h("button", { class: "mini", type: "button", title: "Move section down", onclick: function () { move(SCHEMA.sections, si, 1); } }, "Down"),
+      h("button", { class: "mini", type: "button", title: "Delete section", onclick: function () { removeAt(SCHEMA.sections, si); } }, "Remove")
+    ]),
+    bindText(h("input", { type: "text", placeholder: "Optional help text under the title", style: "font-size:13px;margin-bottom:6px" }), sec, "intro")
+  ]);
+  sec.fields.forEach(function (f, i) { card.appendChild(fieldCard(sec, f, i)); });
+  card.appendChild(h("div", { class: "addbar" }, h("button", { class: "btn secondary small", type: "button",
+    onclick: function () { sec.fields.push({ id: newId("f"), label: "New question", type: "yesno" }); renderEditor(); schedulePreview(); } }, "Add question")));
+  return card;
+}
+
+function renderEditor() {
+  pruneShowIf();
+  var ed = $("#editor"); ed.innerHTML = "";
+  SCHEMA.sections.forEach(function (sec, si) { ed.appendChild(sectionCard(sec, si)); });
+  ed.appendChild(h("div", { class: "addbar" }, h("button", { class: "btn", type: "button",
+    onclick: function () { SCHEMA.sections.push({ id: newId("s"), title: "New section", fields: [] }); renderEditor(); schedulePreview(); } }, "Add section")));
+  ed.appendChild(h("p", { class: "hint", style: "margin-top:10px" }, "The patient page and provider page you export always share this exact form, so codes made by one decode in the other."));
+  $("#form-title").value = SCHEMA.title;
+}
+
+/* ---------- import / example ---------- */
+function loadSchema(obj) {
+  if (!obj || typeof obj !== "object" || !Array.isArray(obj.sections)) { alert("That file is not a form definition."); return; }
+  var norm = { version: obj.version || 1, title: obj.title || "Imported Form", sections: [] };
+  obj.sections.forEach(function (s) {
+    if (!s || typeof s !== "object") return;
+    var sec = { id: s.id, title: s.title || "Section", fields: [] };
+    if (s.intro) sec.intro = s.intro;
+    (Array.isArray(s.fields) ? s.fields : []).forEach(function (f) {
+      if (f && typeof f === "object" && f.type) sec.fields.push(f);
+    });
+    norm.sections.push(sec);
+  });
+  SCHEMA = norm;
+  // assign any missing (unique) ids now that SCHEMA is the new object
+  SCHEMA.sections.forEach(function (s) { if (!s.id) s.id = newId("s"); s.fields.forEach(function (f) { if (!f.id) f.id = newId("f"); }); });
+  renderEditor(); updatePreview();
+}
+function exampleSchema() {
+  return { version: 1, title: "Clinic Intake Example", sections: [
+    { id: "s1", title: "Your details", intro: "Optional.", fields: [
+      { id: "f1", label: "Full name", type: "text" },
+      { id: "f2", label: "Date of birth", type: "date" }
+    ] },
+    { id: "s2", title: "Symptoms", fields: [
+      { id: "f3", label: "Do you have headaches?", type: "yesno" },
+      { id: "f4", label: "How often?", type: "select", options: ["Rarely", "Weekly", "Daily"], showIf: "f3==yes" },
+      { id: "f5", label: "Pain level (0-10)", type: "number", min: 0, max: 10, step: 1 },
+      { id: "f6", label: "Which apply?", type: "multiselect", options: ["Nausea", "Light sensitivity", "Aura"] }
+    ] }
+  ] };
+}
+
+/* ---------- wire up ---------- */
+// read/write the current global SCHEMA (not a captured reference) so Load/Import work
+$("#form-title").addEventListener("input", function () { SCHEMA.title = $("#form-title").value; schedulePreview(); });
+$("#prev-seg").addEventListener("click", function (e) {
+  var b = e.target.closest("button"); if (!b) return;
+  prevMode = b.getAttribute("data-mode");
+  Array.prototype.forEach.call($("#prev-seg").children, function (x) { x.setAttribute("aria-selected", x === b ? "true" : "false"); });
+  updatePreview();
+});
+$("#exp-patient").addEventListener("click", function () { download("index.html", assemble("patient", SCHEMA)); });
+$("#exp-provider").addEventListener("click", function () { download("provider.html", assemble("provider", SCHEMA)); });
+$("#exp-schema").addEventListener("click", function () { download("form-schema.json", JSON.stringify(SCHEMA, null, 2), "application/json"); });
+$("#exp-fhir").addEventListener("click", function () { download("questionnaire.fhir.json", JSON.stringify(fhirQuestionnaire(), null, 2), "application/json"); });
+$("#imp-schema").addEventListener("click", function () { $("#file-input").click(); });
+$("#file-input").addEventListener("change", function (e) {
+  var file = e.target.files[0]; if (!file) return;
+  var r = new FileReader();
+  r.onload = function () { try { loadSchema(JSON.parse(r.result)); } catch (err) { alert("Could not read that file: " + err.message); } };
+  r.readAsText(file); e.target.value = "";
+});
+$("#load-example").addEventListener("click", function () { if (confirm("Replace the current form with the example?")) loadSchema(exampleSchema()); });
+
+renderEditor();
+updatePreview();
+</script>
+</body>
+</html>
